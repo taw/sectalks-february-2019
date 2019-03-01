@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+letters = [*"a".."z", *"A".."Z", *"0".."9", "+", "/"].shuffle
+puts letters.join

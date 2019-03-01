@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+
+flag = ARGV[0] || raise
+
+c0 = open("cat0.pnm", "rb", &:read)[-42*42*3..-1]
+c1 = open("cat1.pnm", "rb", &:read)[-42*42*3..-1]
+
+open("flag.txt", "w") do |fh|
+  fh.puts flag
+end
+
+system "gzip <flag.txt >flag.txt.gz"
+
+data = open("flag.txt.gz", "rb", &:read)
+
+output = "P6\n#{42*8} #{42*data.size}\n255\n".b
+
+data.each_byte do |b|
+  u = "%08b" % b
+  42.times do |i|
+    8.times do |j|
+      cat = (u[j] == "1") ? c1 : c0
+      slice = cat[42*3*i, 42*3]
+      output << slice
+    end
+  end
+end
+
+open("flag.pnm", "wb") do |fh|
+  fh.print output
+end
+
+system "convert flag.pnm flag.png"
+system "cp flag.png flag.catzip"

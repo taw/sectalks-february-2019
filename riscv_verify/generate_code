@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+def gen_verify(flag)
+  verify = []
+  verify << "int verify(char *flag) {"
+  verify << "  if(strlen(flag) != #{flag.size}) return 0;"
+  verify += flag.chars.each_with_index.map{ |c,i|
+    "  if(flag[#{i}] != #{c.ord}) return 0;"
+  }.shuffle
+  verify << "  return 1;"
+  verify << "}"
+  verify.map{ |x| x+"\n" }.join
+end
+
+puts %Q[#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+]
+
+flag = ARGV[0] || raise
+
+puts gen_verify(flag)
+
+puts %q[
+int main(int argc, char **argv) {
+  if(argc != 2) {
+    printf("Password required\n");
+    return 1;
+  }
+
+  if(verify(argv[1])) {
+    printf("Password correct\n");
+    return 0;
+  } else {
+    printf("Password incorrect\n");
+    return 1;
+  }
+}
+]

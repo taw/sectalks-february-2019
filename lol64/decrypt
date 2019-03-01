@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+
+require "base64"
+
+letters = [*"a".."z", *"A".."Z", *"0".."9", "+", "/"].join
+
+unless ARGV.size == 2
+  STDERR.puts "Usage: #{$0} key.txt input.txt"
+  exit 1
+end
+
+key = open(ARGV[0], &:read).chomp
+input = open(ARGV[1], &:read)
+
+puts Base64.decode64(input.tr(key, letters))

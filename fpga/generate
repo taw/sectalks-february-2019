@@ -1,0 +1,120 @@
+#!/usr/bin/env ruby
+
+class Generator
+  def initialize(flag)
+    input = flag.unpack("b*")[0]
+    @input_pins = (0...512).map{|i| input[i] == "1"}
+    @allocated_pins = [*0..1024]
+    @free_pins = [*1025...4096].shuffle
+    @gates = []
+
+    positive_conds = []
+
+    # Just negate everything and setup base conds
+    512.times do |i_pin|
+      neg_i_pin = not_gate(allocate_pin, i_pin)
+      if @input_pins[i_pin]
+        positive_conds << i_pin
+      else
+        positive_conds << neg_i_pin
+      end
+    end
+
+    while positive_conds.size > 2
+      positive_conds.shuffle!
+      a, b = positive_conds.shift(2)
+      positive_conds << and_gate(allocate_pin, a, b)
+    end
+
+    a, b = positive_conds.shift(2)
+    and_gate(1024, a, b)
+
+    connect_unused_pins
+  end
+
+  # One of many fun and gates
+  def and_gate(output_pin, a, b)
+    case rand(4)
+    when 0
+      gate("and", output_pin, a,  b)
+    when 1
+      # nand > not
+      tmp = allocate_pin
+      nand_gate(tmp, a, b)
+      not_gate(output_pin, tmp)
+    when 2
+      # not > nor
+      na = not_gate(allocate_pin, a)
+      nb = not_gate(allocate_pin, b)
+      nor_gate(output_pin, na, nb)
+    when 3
+      # not > or > not
+      na = not_gate(allocate_pin, a)
+      nb = not_gate(allocate_pin, b)
+      nres = or_gate(allocate_pin, na, nb)
+      not_gate(output_pin, nres)
+    else
+      raise
+    end
+    output_pin
+  end
+
+  def nand_gate(output_pin, a, b)
+    gate("nand", output_pin, a, b)
+  end
+
+  def nor_gate(output_pin, a, b)
+    gate("nor", output_pin, a, b)
+  end
+
+  def or_gate(output_pin, a, b)
+    gate("or", output_pin, a, b)
+  end
+
+  # Randomly emulated
+  def not_gate(output_pin, input_pin)
+    gate(["nand", "nor"].sample, output_pin, input_pin, input_pin)
+  end
+
+  def gate(kind, output_pin, a, b)
+    @gates << [kind, output_pin, a, b]
+    output_pin
+  end
+
+  def connect_unused_pins
+    until @free_pins.empty?
+      kind = ["nand", "and", "nor", "or", "xor"].sample
+      pin = allocate_pin
+      @gates << [kind, pin, random_allocated_pins, random_allocated_pins]
+    end
+  end
+
+  def random_allocated_pins
+    @allocated_pins.sample
+  end
+
+  def allocate_pin
+    pin = @free_pins.shift
+    @allocated_pins << pin
+    pin
+  end
+
+  def save
+    open("gates.txt", "w") do |fh|
+      @gates.shuffle.each do |row|
+        fh.puts row.join(" ")
+      end
+    end
+  end
+
+  def call
+    save
+  end
+end
+
+unless ARGV.size == 1
+  STDERR.puts "Usage: #{$0} flag"
+  exit 1
+end
+
+Generator.new(ARGV[0]).call

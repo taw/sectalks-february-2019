@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+
+flag = ARGV[0] || raise
+
+open("crystal_password_validator.cr", "w") do |fh|
+  checks = []
+  (0...flag.size).each do |i|
+    checks << "  return #{i} unless pass.codepoint_at(#{i}) == #{flag[i].ord}"
+  end
+  checks.shuffle!
+
+  fh.puts <<EOF
+def validate_password(pass)
+  return false unless pass.size == #{flag.size}
+#{checks.join("\n")}
+  true
+end
+
+if ARGV.size != 1
+  puts "Password required"
+elsif validate_password ARGV[0]
+  puts "Password OK"
+else
+  puts "Password bad"
+end
+EOF
+end

@@ -1,0 +1,28 @@
+@import 'normalize-scss';
+@include normalize();
+
+.App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+
+  & > div {
+    margin: 10px;
+    width: 300px;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  .correct {
+    padding: 5px;
+    background-color: #8f8;
+  }
+  .error {
+    padding: 5px;
+    background-color: #f88;
+  }
+}

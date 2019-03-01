@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+
+flag = ARGV[0] || raise
+
+open("ocaml_password_validator.ml", "w") do |fh|
+  checks = []
+  (0...flag.size).each do |i|
+    checks << "  String.get pass #{i} == '#{flag[i]}'"
+  end
+  checks.shuffle!
+
+  fh.puts <<EOF
+open Printf
+
+let verify_password pass =
+  String.length pass == #{flag.size} &&
+#{checks.join(" &&\n")}
+;;
+
+let argc = Array.length Sys.argv;;
+
+if argc == 2 then
+  let pass = Array.get Sys.argv 1 in
+  if verify_password pass
+  then
+    printf "Password accepted\\n"
+  else
+    printf "Password rejected\\n"
+else
+  printf "Password missing\\n"
+;;
+EOF
+end

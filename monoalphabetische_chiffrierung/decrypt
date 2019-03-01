@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+upper = [*0x1D56C..0x1D585].pack("U*")
+lower = [*0x1D586..0x1D59F].pack("U*")
+digits = [*0x1D7D8..0x1D7E1].pack("U*")
+mdot = [183].pack("U*")
+
+unless ARGV.size == 2
+  STDERR.puts "Usage: #{$0} key.txt input.txt"
+  exit 1
+end
+
+key = open(ARGV[0], &:read).chomp
+input = open(ARGV[1], &:read)
+
+fkey = key + key.upcase + [*"0".."9"].join + " "
+tkey = lower + upper + digits + mdot
+
+puts input.tr(tkey, fkey)
